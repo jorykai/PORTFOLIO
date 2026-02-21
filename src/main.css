@@ -870,6 +870,14 @@ body.body--lightbox-open .mobile-sticky-meta {
   display: flex;
 }
 
+.photo-lightbox button,
+.video-lightbox button {
+  -webkit-appearance: none;
+  appearance: none;
+  color: #000;
+  -webkit-text-fill-color: #000;
+}
+
 .video-lightbox-media {
   max-width: 90%;
   max-height: 80%;
@@ -918,6 +926,7 @@ body.body--lightbox-open .mobile-sticky-meta {
   justify-self: end;
   cursor: pointer;
   font-size: var(--ui-font-size);
+  color: #000;
   border: 0;
   background: transparent;
   font-family: inherit;
@@ -943,6 +952,7 @@ body.body--lightbox-open .mobile-sticky-meta {
   cursor: pointer;
   font-size: var(--ui-font-size);
   white-space: nowrap;
+  color: #000;
   border: 0;
   background: transparent;
   font-family: inherit;
