@@ -679,12 +679,31 @@ html, body, #root {
     pointer-events: none;
   }
 
+  .mobile-sticky-title-mask {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .mobile-sticky-year-mask {
+    margin-left: 12px;
+    flex-shrink: 0;
+    overflow: hidden;
+  }
+
   .mobile-sticky-title,
   .mobile-sticky-year {
+    display: block;
     font-size: var(--ui-font-size);
     color: #000;
     line-height: 1.2;
     white-space: nowrap;
+    will-change: transform;
+  }
+
+  .mobile-sticky-title {
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .custom-header.is-about {
