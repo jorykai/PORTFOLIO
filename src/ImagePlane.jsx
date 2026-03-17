@@ -1,6 +1,6 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Text, useTexture } from '@react-three/drei'
-import { useFrame } from '@react-three/fiber'
+import { useFrame, useThree } from '@react-three/fiber'
 import gsap from 'gsap'
 import * as THREE from 'three'
 
@@ -104,6 +104,7 @@ const fragmentShader = `
 `
 
 export default function ImagePlane({
+  projectId,
   url,
   videoUrl,
   position,
@@ -119,7 +120,9 @@ export default function ImagePlane({
   width = 3,
   height = 2,
   dockFlowRef = null,
+  onRegisterProjectRectGetter,
 }) {
+  const { camera } = useThree()
   const [baseX, baseY, baseZ] = position
   const groupRef = useRef()
   const dockGroupRef = useRef()
@@ -137,6 +140,10 @@ export default function ImagePlane({
   const [hovered, setHover] = useState(false)
   const isVideo = type === 'video'
   const baseScaleRef = useRef(1)
+  const measureRect = useCallback(
+    () => toScreenRect(meshRef.current, width, height, camera),
+    [camera, width, height]
+  )
 
   const uniforms = useMemo(() => ({
     uTexture: { value: texture },
@@ -195,6 +202,12 @@ export default function ImagePlane({
   useEffect(() => {
     uniforms.uPlaneAspect.value = width / height
   }, [width, height, uniforms])
+
+  useEffect(() => {
+    if (!projectId || typeof onRegisterProjectRectGetter !== 'function') return undefined
+    onRegisterProjectRectGetter(projectId, measureRect)
+    return () => onRegisterProjectRectGetter(projectId, null)
+  }, [measureRect, onRegisterProjectRectGetter, projectId])
 
   useEffect(() => {
     uniforms.uHover.value = 1.0

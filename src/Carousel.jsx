@@ -21,6 +21,8 @@ export default function Carousel({
   runtimeById = {},
   openingProjectId = null,
   onSelect,
+  onRegisterProjectRectGetter,
+  onHoveredProjectChange,
   onActiveIndexChange,
   onScrollProgress,
   onLineFocusChange,
@@ -42,7 +44,6 @@ export default function Carousel({
   const tmpCenterRef = useRef(new THREE.Vector3())
   const tmpLeftRef = useRef(new THREE.Vector3())
   const tmpRightRef = useRef(new THREE.Vector3())
-  const [centeredIndex, setCenteredIndex] = useState(0)
   const [hoveredIndex, setHoveredIndex] = useState(-1)
   const [isMobileViewport, setIsMobileViewport] = useState(
     () => window.matchMedia('(max-width: 768px)').matches
@@ -227,7 +228,6 @@ export default function Carousel({
 
     if (closestIndex !== lastActiveIndexRef.current) {
       lastActiveIndexRef.current = closestIndex
-      setCenteredIndex(closestIndex)
       onActiveIndexChange?.(closestIndex)
     }
   })
@@ -257,6 +257,7 @@ export default function Carousel({
         return (
         <ImagePlane
           key={project.id}
+          projectId={project.id}
           url={project.type === 'video' ? project.poster : project.src}
           videoUrl={project.videoUrl}
           title={project.title}
@@ -268,9 +269,9 @@ export default function Carousel({
           dockFlowRef={dockFocusRefs.current[index]}
           position={[x, 0, 0]}
           offsetX={offsetX}
-          isCentered={index === centeredIndex}
           openingState={openingState}
           onClick={(originRect) => onSelect(project, originRect)}
+          onRegisterProjectRectGetter={onRegisterProjectRectGetter}
           onHoverProjectChange={(isHovered) => {
             if (hoverReleaseTimerRef.current) {
               window.clearTimeout(hoverReleaseTimerRef.current)
@@ -279,11 +280,13 @@ export default function Carousel({
 
             if (isHovered) {
               setHoveredIndex(index)
+              onHoveredProjectChange?.(index)
               return
             }
 
             hoverReleaseTimerRef.current = window.setTimeout(() => {
               setHoveredIndex((prev) => (prev === index ? -1 : prev))
+              onHoveredProjectChange?.(-1)
               hoverReleaseTimerRef.current = null
             }, 60)
           }}

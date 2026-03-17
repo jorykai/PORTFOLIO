@@ -33,6 +33,24 @@ export const projects = [
     videoUrl: "/images/JuliVinterlandHBWebsite.mp4"
   },
   {
+    id: 7,
+    title: "GROEDE",
+    year: "2025",
+    type: "video",
+    src: "/images/Groede-Thumbnail.jpg",
+    poster: "/images/Groede-Thumbnail.jpg",
+    videoUrl: "/images/Groede-HB.mp4"
+  },
+  {
+    id: 8,
+    title: "BRUSSELS",
+    year: "2025",
+    type: "video",
+    src: "/images/Brussels-Thumbnail.jpg",
+    poster: "/images/Brussels-Thumbnail.jpg",
+    videoUrl: "/images/Brussels-HB.mp4"
+  },
+  {
     id: 4,
     title: "KRAKOW",
     year: "2024",
@@ -51,9 +69,9 @@ export const projects = [
     title: "SINT PIETERSBERG",
     year: "2024",
     type: "video",
-    src: "/images/sint-pietersberg.png",
-    poster: "/images/sint-pietersberg.png",
-    videoUrl: "/images/SintPietersHBWebsite.mp4"
+    src: "/images/SintPieters-Thumbnail.jpg",
+    poster: "/images/SintPieters-Thumbnail.jpg",
+    videoUrl: "/images/SintPieters-HB.mp4"
   },
   {
     id: 6,

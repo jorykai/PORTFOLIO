@@ -15,10 +15,46 @@ const RULER_TICK_BULGE_SIGMA = 36
 const RULER_PLAYHEAD_LERP = 0.12
 const RULER_CANVAS_HEIGHT = 30
 const RULER_TICK_COLOR = 'rgba(0, 0, 0, 0.14)'
+const SITE_URL = 'https://jorywestra.com'
+const DEFAULT_OG_IMAGE = `${SITE_URL}/images/jorywestra.jpg`
 
 function normalizePath(pathname) {
   const normalized = pathname.replace(/\/+$/, '')
   return normalized || '/'
+}
+
+function upsertMetaTag(attribute, key, content) {
+  if (typeof document === 'undefined') return
+  let tag = document.head.querySelector(`meta[${attribute}="${key}"]`)
+  if (!tag) {
+    tag = document.createElement('meta')
+    tag.setAttribute(attribute, key)
+    document.head.appendChild(tag)
+  }
+  tag.setAttribute('content', content)
+}
+
+function upsertLinkTag(rel, href) {
+  if (typeof document === 'undefined') return
+  let tag = document.head.querySelector(`link[rel="${rel}"]`)
+  if (!tag) {
+    tag = document.createElement('link')
+    tag.setAttribute('rel', rel)
+    document.head.appendChild(tag)
+  }
+  tag.setAttribute('href', href)
+}
+
+function upsertJsonLd(id, data) {
+  if (typeof document === 'undefined') return
+  let tag = document.head.querySelector(`script[data-seo="${id}"]`)
+  if (!tag) {
+    tag = document.createElement('script')
+    tag.type = 'application/ld+json'
+    tag.setAttribute('data-seo', id)
+    document.head.appendChild(tag)
+  }
+  tag.textContent = JSON.stringify(data)
 }
 
 // --- 1. THE HEADER (Internal) ---
@@ -134,7 +170,7 @@ function Header({
             ABOUT
           </a>
         )}
-        <a className="hover-brackets" href="mailto:jorykai@gmail.com?subject=Inquiry%20to%20work">
+        <a className="hover-brackets" href="mailto:jory@jorywestra.com?subject=Inquiry%20to%20work">
           CONTACT
         </a>
       </div>
@@ -260,18 +296,23 @@ function AboutPage({ onNavigate }) {
             <div className="about-copy-mask">
               <div ref={copyRef} className="about-copy">
                 <p>
-                  I&apos;VE WORKED ACROSS OPERATIONS, MARKETING AND CONTENT FOR BRANDS LIKE MASE HOME,
-                  REBOTTLED, DNV, AND JIMMY NELSON. MY EXPERIENCE RANGES FROM MANAGING PRODUCT FLOWS AND
-                  RETAILER COMMUNICATION, TO SUPPORTING VISUAL CONTENT, SOCIAL MEDIA PLANNING AND BRAND
-                  DOCUMENTATION.
+                  I&apos;M A FREELANCE VIDEOGRAPHER BASED IN OSLO, CREATING VISUAL CONTENT FOR BRANDS,
+                  BUSINESSES, AND PEOPLE WHO WANT CLEAR, REFINED, AND ENGAGING STORYTELLING.
                 </p>
                 <p>
-                  I ENJOY COMBINING STRUCTURE WITH CREATIVITY, AND I&apos;M ALWAYS LOOKING FOR WAYS TO MAKE
-                  CONTENT CLEARER, CLEANER AND MORE VISUALLY CONSISTENT.
+                  MY BACKGROUND SPANS OPERATIONS, MARKETING, AND CONTENT, WHICH MEANS I BRING MORE THAN
+                  JUST FILMING TO A PROJECT. I UNDERSTAND HOW TO SHAPE VISUALS THAT SUPPORT A BRAND,
+                  COMMUNICATE CLEARLY, AND FEEL CONSISTENT ACROSS PLATFORMS.
                 </p>
                 <p>
-                  ORIGINALLY FROM THE NETHERLANDS, NOW LEARNING NORWEGIAN AND BUILDING MY CREATIVE SKILLSET
-                  IN OSLO.
+                  I&apos;VE WORKED ACROSS PRODUCT-FOCUSED, CREATIVE, AND BRAND-LED ENVIRONMENTS FOR NAMES
+                  LIKE MASE HOME, REBOTTLED, DNV, AND JIMMY NELSON. FROM PLANNING AND CAPTURING CONTENT TO
+                  SUPPORTING BRAND COMMUNICATION AND VISUAL DIRECTION, I ENJOY COMBINING STRUCTURE WITH
+                  CREATIVITY TO MAKE CONTENT FEEL INTENTIONAL AND POLISHED.
+                </p>
+                <p>
+                  ORIGINALLY FROM THE NETHERLANDS AND NOW BASED IN OSLO, I&apos;M AVAILABLE FOR FREELANCE
+                  VIDEOGRAPHY PROJECTS IN OSLO AND SURROUNDING AREAS.
                 </p>
               </div>
             </div>
@@ -288,7 +329,7 @@ function AboutPage({ onNavigate }) {
               <a className="hover-brackets" href="https://www.tiktok.com/@jorywestra" target="_blank" rel="noreferrer">
                 TIKTOK
               </a>
-              <a className="hover-brackets" href="mailto:jorykai@gmail.com?subject=Inquiry%20to%20work">
+              <a className="hover-brackets" href="mailto:jory@jorywestra.com?subject=Inquiry%20to%20work">
                 EMAIL
               </a>
             </div>
@@ -321,6 +362,7 @@ export default function App() {
   const [openingProjectId, setOpeningProjectId] = useState(null)
   const [centeredIndex, setCenteredIndex] = useState(0)
   const [lineHitIndex, setLineHitIndex] = useState(0)
+  const [hoveredProjectIndex, setHoveredProjectIndex] = useState(-1)
   const [runtimeById, setRuntimeById] = useState({})
   const [isMobileViewport, setIsMobileViewport] = useState(
     () => window.matchMedia('(max-width: 768px)').matches
@@ -333,6 +375,7 @@ export default function App() {
   const hoverYearLineRef = useRef(null)
   const hoverCurrentYearRef = useRef('')
   const hoverYearTimelineRef = useRef(null)
+  const lineFocusIndexRef = useRef(-1)
   const openDelayTimerRef = useRef(null)
   const canvasShellRef = useRef(null)
   const filterTransitionRef = useRef(null)
@@ -355,6 +398,7 @@ export default function App() {
   const desktopRulerTrackWidthRef = useRef(0)
   const desktopRulerTrackMetricsRef = useRef({ x: null, width: null })
   const desktopRulerPositionsRef = useRef([])
+  const projectRectGettersRef = useRef(new Map())
   const [isFilterTransitioning, setIsFilterTransitioning] = useState(false)
   const [isPageTransitioning, setIsPageTransitioning] = useState(false)
   const [showPageLoader, setShowPageLoader] = useState(() => {
@@ -397,6 +441,83 @@ export default function App() {
     window.addEventListener('popstate', onPopState)
     return () => window.removeEventListener('popstate', onPopState)
   }, [])
+
+  const handleRegisterProjectRectGetter = useCallback((projectId, getter) => {
+    if (!projectId) return
+    if (typeof getter === 'function') {
+      projectRectGettersRef.current.set(projectId, getter)
+      return
+    }
+    projectRectGettersRef.current.delete(projectId)
+  }, [])
+
+  const getProjectRect = useCallback((projectId) => {
+    if (!projectId) return null
+    const getter = projectRectGettersRef.current.get(projectId)
+    return typeof getter === 'function' ? getter() : null
+  }, [])
+
+  useEffect(() => {
+    const canonicalPath = routePath === '/' ? '' : routePath
+    const canonicalUrl = `${SITE_URL}${canonicalPath}`
+    const isHome = routePath === '/'
+    const title = isHome
+      ? 'Videographer In Oslo | Jory Westra'
+      : 'About | Jory Westra'
+    const description = isHome
+      ? 'Freelance videographer in Oslo creating refined brand films, social content, and commercial video for brands, businesses, and people in Oslo and surrounding areas.'
+      : 'Jory Westra is a freelance videographer based in Oslo, creating refined visual content for brands, businesses, and people in Oslo and surrounding areas.'
+
+    document.title = title
+    upsertMetaTag('name', 'description', description)
+    upsertMetaTag('name', 'robots', 'index, follow')
+    upsertMetaTag('property', 'og:type', 'website')
+    upsertMetaTag('property', 'og:site_name', 'Jory Westra')
+    upsertMetaTag('property', 'og:title', title)
+    upsertMetaTag('property', 'og:description', description)
+    upsertMetaTag('property', 'og:url', canonicalUrl)
+    upsertMetaTag('property', 'og:image', DEFAULT_OG_IMAGE)
+    upsertMetaTag('name', 'twitter:card', 'summary_large_image')
+    upsertMetaTag('name', 'twitter:title', title)
+    upsertMetaTag('name', 'twitter:description', description)
+    upsertMetaTag('name', 'twitter:image', DEFAULT_OG_IMAGE)
+    upsertLinkTag('canonical', canonicalUrl)
+
+    if (isHome) {
+      upsertJsonLd('professional-service', {
+        '@context': 'https://schema.org',
+        '@type': 'ProfessionalService',
+        name: 'Jory Westra',
+        url: SITE_URL,
+        image: DEFAULT_OG_IMAGE,
+        description,
+        email: 'jory@jorywestra.com',
+        areaServed: [
+          { '@type': 'City', name: 'Oslo' },
+          { '@type': 'Country', name: 'Norway' },
+        ],
+        address: {
+          '@type': 'PostalAddress',
+          addressLocality: 'Oslo',
+          addressCountry: 'NO',
+        },
+        sameAs: [
+          'https://instagram.com/jorywestra',
+          'https://www.tiktok.com/@jorywestra',
+        ],
+        serviceType: [
+          'Videography',
+          'Commercial Videography',
+          'Brand Video Production',
+          'Social Media Video Content',
+        ],
+      })
+      return
+    }
+
+    const existingJsonLd = document.head.querySelector('script[data-seo="professional-service"]')
+    if (existingJsonLd) existingJsonLd.remove()
+  }, [routePath])
 
   const handleNavigate = useCallback((targetPath, options = {}) => {
     const normalized = normalizePath(targetPath)
@@ -643,7 +764,6 @@ export default function App() {
     const shell = canvasShellRef.current
     const wasAboutPage = prevIsAboutPageRef.current
     const returningFromAbout = wasAboutPage && !isAboutPage
-    const isInitialMainVisit = !isAboutPage && !hasPlayedMainEnterRef.current
     prevIsAboutPageRef.current = isAboutPage
 
     if (isAboutPage || !shell) return
@@ -651,7 +771,10 @@ export default function App() {
 
     const waitingForLoader = shouldRunPageLoader && showPageLoader
     if (waitingForLoader) return
-    if (!returningFromAbout && !isInitialMainVisit) return
+    if (!returningFromAbout) {
+      hasPlayedMainEnterRef.current = true
+      return
+    }
 
     mainEnterTransitionRef.current?.kill()
     gsap.killTweensOf(shell)
@@ -913,6 +1036,8 @@ export default function App() {
   useEffect(() => {
     setCenteredIndex(0)
     setLineHitIndex(0)
+    setHoveredProjectIndex(-1)
+    lineFocusIndexRef.current = -1
     handleHoverTitleChange('')
     handleHoverYearChange('')
     desktopRulerTrackMetricsRef.current = { x: null, width: null }
@@ -929,6 +1054,8 @@ export default function App() {
 
   useEffect(() => {
     desktopRulerMarkerRefs.current = desktopRulerMarkerRefs.current.slice(0, visibleProjects.length)
+    setHoveredProjectIndex(-1)
+    lineFocusIndexRef.current = -1
     desktopRulerTrackMetricsRef.current = { x: null, width: null }
     desktopRulerPositionsRef.current = []
     desktopRulerMarkerWindowsRef.current = []
@@ -941,6 +1068,8 @@ export default function App() {
   useEffect(() => {
     if (isAboutPage) return
     setLineHitIndex(0)
+    setHoveredProjectIndex(-1)
+    lineFocusIndexRef.current = -1
     desktopRulerTrackMetricsRef.current = { x: null, width: null }
     desktopRulerPositionsRef.current = []
     desktopRulerMarkerWindowsRef.current = []
@@ -969,11 +1098,37 @@ export default function App() {
     return () => window.cancelAnimationFrame(rafId)
   }, [clearDesktopRulerCanvas, drawDesktopRulerCanvas, isAboutPage, isMobileViewport])
 
+  useEffect(() => {
+    if (window.matchMedia('(max-width: 768px)').matches) return
+
+    if (hoveredProjectIndex >= 0 && hoveredProjectIndex < visibleProjects.length) {
+      const project = visibleProjects[hoveredProjectIndex]
+      handleHoverTitleChange(project?.title || '')
+      handleHoverYearChange(project?.year || '')
+      return
+    }
+
+    const lineFocusIndex = lineFocusIndexRef.current
+    if (lineFocusIndex >= 0 && lineFocusIndex < visibleProjects.length) {
+      const project = visibleProjects[lineFocusIndex]
+      handleHoverTitleChange(project?.title || '')
+      handleHoverYearChange(project?.year || '')
+      return
+    }
+
+    handleHoverTitleChange('')
+    handleHoverYearChange('')
+  }, [hoveredProjectIndex, visibleProjects, handleHoverTitleChange, handleHoverYearChange])
+
   const handleScrollProgress = useCallback((progress = 0) => {
     if (!scrollGuideLineRef.current) return
+    if (isFilterTransitioning) {
+      scrollGuideLineRef.current.style.left = '0%'
+      return
+    }
     const clamped = Math.max(0, Math.min(1, progress))
     scrollGuideLineRef.current.style.left = `${clamped * 100}%`
-  }, [])
+  }, [isFilterTransitioning])
 
   const handleRulerPositionsChange = useCallback((leftPositions = [], focusX = 0) => {
     if (isMobileViewport || !leftPositions?.length || !desktopRulerTrackRef.current) return
@@ -1054,6 +1209,8 @@ export default function App() {
 
   const handleLineFocusChange = useCallback((index) => {
     if (window.matchMedia('(max-width: 768px)').matches) return
+    lineFocusIndexRef.current = index
+    if (hoveredProjectIndex >= 0) return
     if (index < 0 || index >= visibleProjects.length) {
       handleHoverTitleChange('')
       handleHoverYearChange('')
@@ -1062,7 +1219,7 @@ export default function App() {
     const project = visibleProjects[index]
     handleHoverTitleChange(project?.title || '')
     handleHoverYearChange(project?.year || '')
-  }, [visibleProjects, handleHoverTitleChange, handleHoverYearChange])
+  }, [hoveredProjectIndex, visibleProjects, handleHoverTitleChange, handleHoverYearChange])
 
   const handleLineHitIndexChange = useCallback((index) => {
     if (!visibleProjects.length) return
@@ -1074,6 +1231,9 @@ export default function App() {
     if (nextFilter === filter || isFilterTransitioning || !canvasShellRef.current) return
 
     const shell = canvasShellRef.current
+    if (scrollGuideLineRef.current) {
+      scrollGuideLineRef.current.style.left = '0%'
+    }
     mainEnterTransitionRef.current?.kill()
     mainEnterTransitionRef.current = null
     gsap.set(shell, { clearProps: 'transform,willChange' })
@@ -1086,6 +1246,8 @@ export default function App() {
     const outTl = gsap.timeline({
       onComplete: () => {
         setFilter(nextFilter)
+        setHoveredProjectIndex(-1)
+        lineFocusIndexRef.current = -1
         handleHoverTitleChange('')
         handleHoverYearChange('')
         setCenteredIndex(0)
@@ -1163,11 +1325,24 @@ export default function App() {
 
       {!isAboutPage && (
         <>
+          <section className="seo-copy" aria-label="Homepage introduction">
+            <h1>Jory Westra Is A Freelance Videographer In Oslo</h1>
+            <p>
+              Freelance videographer in Oslo creating refined brand films, social content, and
+              commercial video for brands, businesses, and people in Oslo and surrounding areas.
+            </p>
+            <p>
+              Jory Westra creates visual storytelling for brands and businesses that want clear,
+              polished, and engaging video content in Oslo.
+            </p>
+          </section>
+
           {selectedProject && (
             <Lightbox 
               project={selectedProject} 
               originRect={lightboxOriginRect}
               visibleProjects={visibleProjects}
+              getProjectRect={getProjectRect}
               onClose={() => {
                 setSelectedProject(null)
                 setLightboxOriginRect(null)
@@ -1225,11 +1400,13 @@ export default function App() {
               <Suspense fallback={null}>
                 <ambientLight intensity={1} />
                 
-                <ScrollControls horizontal pages={scrollPages} damping={0.08}>
+                <ScrollControls key={filter} horizontal pages={scrollPages} damping={0.08}>
                   <Carousel 
                     visibleProjects={visibleProjects}
                     runtimeById={runtimeById}
                     openingProjectId={openingProjectId}
+                    onRegisterProjectRectGetter={handleRegisterProjectRectGetter}
+                    onHoveredProjectChange={setHoveredProjectIndex}
                     onSelect={(project, originRect) => {
                       if (openDelayTimerRef.current) {
                         window.clearTimeout(openDelayTimerRef.current)
