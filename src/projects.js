@@ -1,5 +1,14 @@
 export const projects = [
   {
+    id: 9,
+    title: "STOCKHOLM",
+    year: "2026",
+    type: "video",
+    src: "/images/Stockholm-Thumbnail.jpg",
+    poster: "/images/Stockholm-Thumbnail.jpg",
+    videoUrl: "/images/Stockholm-HB.mp4"
+  },
+  {
     id: 1,
     title: "GOLDEN HOUR OSLO",
     year: "2025",
