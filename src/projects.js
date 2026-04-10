@@ -6,7 +6,7 @@ export const projects = [
     type: "video",
     src: "/images/Stockholm-Thumbnail.jpg",
     poster: "/images/Stockholm-Thumbnail.jpg",
-    videoUrl: "/images/Stockholm-HB.mp4"
+    videoUrl: "/images/Stockholm-V8.mp4"
   },
   {
     id: 1,
