@@ -1,5 +1,14 @@
 export const projects = [
   {
+    id: 10,
+    title: "SUNSUBIRO X BROKEN OSLO",
+    year: "2026",
+    type: "video",
+    src: "/images/SUNSUBIROXBROKENOSLO-THUMBNAIL.jpg",
+    poster: "/images/SUNSUBIROXBROKENOSLO-THUMBNAIL.jpg",
+    videoUrl: "/images/SUNSUBIROXBROKENOSLO-HB.mp4"
+  },
+  {
     id: 9,
     title: "STOCKHOLM",
     year: "2026",
