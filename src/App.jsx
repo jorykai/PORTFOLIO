@@ -279,7 +279,7 @@ function AboutPage({ onNavigate }) {
       <section className="about-photo-column" aria-hidden="true">
         <img
           ref={imageRef}
-          src="/images/jorywestra.jpg"
+          src="/images/jorywestra2.jpg"
           alt=""
           className="about-photo"
           loading="eager"
