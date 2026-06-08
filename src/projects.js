@@ -1,5 +1,22 @@
 export const projects = [
   {
+    id: 11,
+    title: "MARIENE & HERMANN",
+    year: "2026",
+    type: "photo",
+    src: "/images/Mariene-Hermann-Thumbnail.jpg",
+    gallery: [
+      "/images/Mariene-Hermann-1.jpg",
+      "/images/Mariene-Hermann-2.jpg",
+      "/images/Mariene-Hermann-3.jpg",
+      "/images/Mariene-Hermann-4.jpg",
+      "/images/Mariene-Hermann-5.jpg",
+      "/images/Mariene-Hermann-6.jpg",
+      "/images/Mariene-Hermann-7.jpg",
+      "/images/Mariene-Hermann-8.jpg",
+    ]
+  },
+  {
     id: 10,
     title: "SUNSUBIRO X BROKEN OSLO",
     year: "2026",
