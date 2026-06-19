@@ -77,20 +77,6 @@ export const projects = [
     videoUrl: "/images/JuliVinterlandHBWebsite.mp4"
   },
   {
-    id: 4,
-    title: "KRAKOW",
-    year: "2024",
-    type: "photo",
-    src: "/images/krakow.jpg",
-    gallery: [
-      "/images/krakow-1.jpg",
-      "/images/krakow-2.jpg",
-      "/images/krakow-3.jpg",
-      "/images/krakow-4.jpg",
-      "/images/krakow-5.jpg",
-    ]
-  },
-  {
     id: 5,
     title: "SINT PIETERSBERG",
     year: "2024",
@@ -98,21 +84,5 @@ export const projects = [
     src: "/images/SintPieters-Thumbnail.jpg",
     poster: "/images/SintPieters-Thumbnail.jpg",
     videoUrl: "/images/SintPieters-HB.mp4"
-  },
-  {
-    id: 6,
-    title: "ENGELSVIKEN",
-    year: "2024",
-    type: "photo",
-    src: "/images/engelsviken.jpg",
-    gallery: [
-      "/images/engelsviken-1.jpg",
-      "/images/engelsviken-2.jpg",
-      "/images/engelsviken-3.jpg",
-      "/images/engelsviken-4.jpg",
-      "/images/engelsviken-5.jpg",
-      "/images/engelsviken-6.jpg",
-      "/images/engelsviken-7.jpg",
-    ]
   },
 ];
