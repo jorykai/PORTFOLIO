@@ -1,5 +1,14 @@
 export const projects = [
   {
+    id: 12,
+    title: "MARGAUX",
+    year: "2026",
+    type: "video",
+    src: "/images/Margaux-Thumbnail.jpg",
+    poster: "/images/Margaux-Thumbnail.jpg",
+    videoUrl: "/images/Margaux-JW.mp4"
+  },
+  {
     id: 11,
     title: "MARIENE & HERMANN",
     year: "2026",
