@@ -82,10 +82,10 @@ const fragmentShader = `
 
   vec2 coverUv(vec2 uv, float imageAspect, float planeAspect) {
     vec2 centered = uv - 0.5;
-    if (planeAspect > imageAspect) {
-      centered.y *= planeAspect / imageAspect;
+    if (imageAspect > planeAspect) {
+      centered.x *= planeAspect / imageAspect;
     } else {
-      centered.x *= imageAspect / planeAspect;
+      centered.y *= imageAspect / planeAspect;
     }
     return centered + 0.5;
   }
@@ -137,6 +137,8 @@ export default function ImagePlane({
   const videoElementRef = useRef(null)
   const videoTextureRef = useRef(null)
   const texture = useTexture(url)
+  const [posterAspect, setPosterAspect] = useState(1.0)
+  const [videoAspect, setVideoAspect] = useState(16 / 9)
   const [hovered, setHover] = useState(false)
   const isVideo = type === 'video'
   const baseScaleRef = useRef(1)
@@ -165,10 +167,14 @@ export default function ImagePlane({
       texture.wrapT = THREE.ClampToEdgeWrapping
 
       if (texture.image?.width && texture.image?.height) {
-        uniforms.uImageAspect.value = texture.image.width / texture.image.height
+        const nextPosterAspect = texture.image.width / texture.image.height
+        setPosterAspect(nextPosterAspect)
+        if (!hovered || !isVideo) {
+          uniforms.uImageAspect.value = nextPosterAspect
+        }
       }
     }
-  }, [texture, uniforms])
+  }, [hovered, isVideo, texture, uniforms])
 
   useEffect(() => {
     if (!isVideo || !videoUrl) return
@@ -181,6 +187,15 @@ export default function ImagePlane({
     video.playsInline = true
     video.preload = 'metadata'
 
+    const handleLoadedMetadata = () => {
+      if (video.videoWidth && video.videoHeight) {
+        setVideoAspect(video.videoWidth / video.videoHeight)
+      }
+    }
+
+    video.addEventListener('loadedmetadata', handleLoadedMetadata)
+    video.load()
+
     const videoTexture = new THREE.VideoTexture(video)
     videoTexture.minFilter = THREE.LinearFilter
     videoTexture.magFilter = THREE.LinearFilter
@@ -190,6 +205,7 @@ export default function ImagePlane({
     videoTextureRef.current = videoTexture
 
     return () => {
+      video.removeEventListener('loadedmetadata', handleLoadedMetadata)
       video.pause()
       video.removeAttribute('src')
       video.load()
@@ -216,6 +232,7 @@ export default function ImagePlane({
   useEffect(() => {
     if (!isVideo) {
       uniforms.uTexture.value = texture
+      uniforms.uImageAspect.value = posterAspect
       return
     }
 
@@ -224,15 +241,18 @@ export default function ImagePlane({
 
     if (!video || !videoTexture) {
       uniforms.uTexture.value = texture
+      uniforms.uImageAspect.value = posterAspect
       return
     }
 
     if (hovered) {
       uniforms.uTexture.value = videoTexture
+      uniforms.uImageAspect.value = videoAspect
       const playPromise = video.play()
       if (playPromise?.catch) {
         playPromise.catch(() => {
           uniforms.uTexture.value = texture
+          uniforms.uImageAspect.value = posterAspect
         })
       }
       return
@@ -241,7 +261,8 @@ export default function ImagePlane({
     video.pause()
     video.currentTime = 0
     uniforms.uTexture.value = texture
-  }, [hovered, isVideo, texture, uniforms])
+    uniforms.uImageAspect.value = posterAspect
+  }, [hovered, isVideo, posterAspect, texture, uniforms, videoAspect])
 
   useEffect(() => {
     const lines = [lineLeftRef.current, lineRightRef.current].filter(Boolean)
