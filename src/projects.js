@@ -1,5 +1,23 @@
 export const projects = [
   {
+    id: 14,
+    title: "BROKEN OSLO SLOTTSFJELL BTS",
+    year: "2026",
+    type: "video",
+    src: "/images/BrokenOslo-Slottsfjell-BTS-Thumbnail.jpg",
+    poster: "/images/BrokenOslo-Slottsfjell-BTS-Thumbnail.jpg",
+    videoUrl: "/images/Slottsfjell-BTS-Part1.mp4"
+  },
+  {
+    id: 13,
+    title: "STOMPIN JACQ AT BYENS TAK",
+    year: "2026",
+    type: "video",
+    src: "/images/StompinJacq-Byenstak-Thumbnail.jpg",
+    poster: "/images/StompinJacq-Byenstak-Thumbnail.jpg",
+    videoUrl: "/images/StompinJacq-Byenstak.mp4"
+  },
+  {
     id: 12,
     title: "MARGAUX",
     year: "2026",
