@@ -296,8 +296,8 @@ function AboutPage({ onNavigate }) {
             <div className="about-copy-mask">
               <div ref={copyRef} className="about-copy">
                 <p>
-                  I&apos;M A FREELANCE VIDEOGRAPHER BASED IN OSLO, CREATING VISUAL CONTENT FOR BRANDS,
-                  BUSINESSES, AND PEOPLE WHO WANT CLEAR, REFINED, AND ENGAGING STORYTELLING.
+                  I&apos;M A FREELANCE VIDEOGRAPHER BASED IN OSLO AND AMSTERDAM, CREATING VISUAL CONTENT FOR
+                  BRANDS, BUSINESSES, AND PEOPLE WHO WANT CLEAR, REFINED, AND ENGAGING STORYTELLING.
                 </p>
                 <p>
                   MY BACKGROUND SPANS OPERATIONS, MARKETING, AND CONTENT, WHICH MEANS I BRING MORE THAN
@@ -311,8 +311,8 @@ function AboutPage({ onNavigate }) {
                   CREATIVITY TO MAKE CONTENT FEEL INTENTIONAL AND POLISHED.
                 </p>
                 <p>
-                  ORIGINALLY FROM THE NETHERLANDS AND NOW BASED IN OSLO, I&apos;M AVAILABLE FOR FREELANCE
-                  VIDEOGRAPHY PROJECTS IN OSLO AND SURROUNDING AREAS.
+                  ORIGINALLY FROM THE NETHERLANDS AND NOW BASED IN OSLO AND AMSTERDAM, I&apos;M AVAILABLE FOR
+                  FREELANCE VIDEOGRAPHY PROJECTS IN OSLO, AMSTERDAM AND SURROUNDING AREAS.
                 </p>
               </div>
             </div>
