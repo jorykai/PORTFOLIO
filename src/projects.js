@@ -6,7 +6,7 @@ export const projects = [
     type: "video",
     src: "/images/BrokenOslo-Slottsfjell-BTS-Thumbnail.jpg",
     poster: "/images/BrokenOslo-Slottsfjell-BTS-Thumbnail.jpg",
-    videoUrl: "/images/Slottsfjell-BTS-Part1.mp4"
+    videoUrl: "/images/BrokenOslo-Slottsfjell-BTS-Part1V3-Voiceover-subtitles.mp4"
   },
   {
     id: 13,
