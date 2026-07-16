@@ -139,6 +139,7 @@ export default function ImagePlane({
   const videoElementRef = useRef(null)
   const videoTextureRef = useRef(null)
   const [videoVersion, setVideoVersion] = useState(0)
+  const [videoReady, setVideoReady] = useState(false)
   const texture = useTexture(url)
   const [posterAspect, setPosterAspect] = useState(1.0)
   const [videoAspect, setVideoAspect] = useState(16 / 9)
@@ -184,12 +185,13 @@ export default function ImagePlane({
   useEffect(() => {
     if (!isVideo || !videoUrl || !hovered) return
 
+    setVideoReady(false)
     const video = document.createElement('video')
     video.crossOrigin = 'anonymous'
     video.muted = true
     video.loop = true
     video.playsInline = true
-    video.preload = 'metadata'
+    video.preload = 'auto'
     video.src = videoUrl
 
     const handleLoadedMetadata = () => {
@@ -206,7 +208,13 @@ export default function ImagePlane({
       )
     }
 
+    const handleLoadedData = () => {
+      setVideoReady(true)
+      setVideoVersion((version) => version + 1)
+    }
+
     video.addEventListener('loadedmetadata', handleLoadedMetadata)
+    video.addEventListener('loadeddata', handleLoadedData)
     video.load()
 
     const videoTexture = new THREE.VideoTexture(video)
@@ -216,16 +224,17 @@ export default function ImagePlane({
 
     videoElementRef.current = video
     videoTextureRef.current = videoTexture
-    setVideoVersion((version) => version + 1)
 
     return () => {
       video.removeEventListener('loadedmetadata', handleLoadedMetadata)
+      video.removeEventListener('loadeddata', handleLoadedData)
       video.pause()
       video.removeAttribute('src')
       video.load()
       videoTexture.dispose()
       videoElementRef.current = null
       videoTextureRef.current = null
+      setVideoReady(false)
     }
   }, [hovered, isVideo, onRuntimeChange, projectId, videoUrl])
 
@@ -253,7 +262,7 @@ export default function ImagePlane({
     const video = videoElementRef.current
     const videoTexture = videoTextureRef.current
 
-    if (!video || !videoTexture) {
+    if (!video || !videoTexture || !videoReady) {
       uniforms.uTexture.value = texture
       uniforms.uImageAspect.value = posterAspect
       return
@@ -276,7 +285,7 @@ export default function ImagePlane({
     video.currentTime = 0
     uniforms.uTexture.value = texture
     uniforms.uImageAspect.value = posterAspect
-  }, [hovered, isVideo, posterAspect, texture, uniforms, videoAspect, videoVersion])
+  }, [hovered, isVideo, posterAspect, texture, uniforms, videoAspect, videoReady, videoVersion])
 
   useEffect(() => {
     const lines = [lineLeftRef.current, lineRightRef.current].filter(Boolean)
