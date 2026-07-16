@@ -49,27 +49,28 @@ html, body, #root {
   font-size: var(--ui-font-size);
 }
 
-.page-loader {
+.opening-intro {
   position: fixed;
   inset: 0;
-  z-index: 2147483646;
+  z-index: 1000;
   display: flex;
   justify-content: center;
   align-items: flex-end;
   padding: 0 24px 34px;
   background: #fff;
-  pointer-events: auto;
+  pointer-events: none;
   overflow: hidden;
+  will-change: transform;
 }
 
-.page-loader-title-mask {
+.opening-intro-title-mask {
   height: clamp(44px, 6.8vw, 126px);
   overflow: hidden;
   display: flex;
   align-items: center;
 }
 
-.page-loader-title-line {
+.opening-intro-title-line {
   font-size: clamp(64px, 8.3vw, 156px);
   line-height: 1;
   color: #000;
@@ -628,6 +629,18 @@ html, body, #root {
     font-size: var(--ui-font-size-mobile);
   }
 
+  .opening-intro {
+    padding: 0 18px calc(32px + env(safe-area-inset-bottom));
+  }
+
+  .opening-intro-title-mask {
+    height: clamp(30px, 9vw, 52px);
+  }
+
+  .opening-intro-title-line {
+    font-size: clamp(28px, 8.8vw, 54px);
+  }
+
   .custom-header {
     grid-template-columns: 1fr;
     justify-content: flex-start;
@@ -664,18 +677,6 @@ html, body, #root {
       #fff 60%
     );
     z-index: 120;
-  }
-
-  .page-loader {
-    padding: 0 18px calc(32px + env(safe-area-inset-bottom));
-  }
-
-  .page-loader-title-mask {
-    height: clamp(30px, 9vw, 52px);
-  }
-
-  .page-loader-title-line {
-    font-size: clamp(28px, 8.8vw, 54px);
   }
 
   .mobile-sticky-meta {

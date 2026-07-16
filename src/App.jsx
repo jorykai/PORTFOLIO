@@ -1,10 +1,9 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState, Suspense } from 'react'
-import { Canvas } from '@react-three/fiber'
-import { ScrollControls } from '@react-three/drei'
+import React, { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import gsap from 'gsap'
-import Carousel from './Carousel'
-import Lightbox from './Lightbox'
 import { projects } from './projects'
+
+const HomeCanvas = lazy(() => import('./HomeCanvas'))
+const Lightbox = lazy(() => import('./Lightbox'))
 
 const RULER_LINE_NUMBER_GAP = 20
 const RULER_TICK_SPACING = 12
@@ -381,10 +380,8 @@ export default function App() {
   const filterTransitionRef = useRef(null)
   const filterWipeRef = useRef({ progress: 0, direction: -1 })
   const scrollGuideLineRef = useRef(null)
-  const pageLoaderRef = useRef(null)
-  const pageLoaderLineRef = useRef(null)
-  const pageLoaderIntroTlRef = useRef(null)
-  const pageLoaderExitTlRef = useRef(null)
+  const openingIntroRef = useRef(null)
+  const openingIntroLineRef = useRef(null)
   const headerNavTransitionRef = useRef(null)
   const mainEnterTransitionRef = useRef(null)
   const prevIsAboutPageRef = useRef(isAboutPage)
@@ -401,21 +398,17 @@ export default function App() {
   const projectRectGettersRef = useRef(new Map())
   const [isFilterTransitioning, setIsFilterTransitioning] = useState(false)
   const [isPageTransitioning, setIsPageTransitioning] = useState(false)
-  const [showPageLoader, setShowPageLoader] = useState(() => {
-    const path = normalizePath(window.location.pathname)
-    return path === '/' || path === '/index' || path === '/index.html'
-  })
+  const [isCarouselReady, setIsCarouselReady] = useState(false)
+  const [hasOpeningIntroEntered, setHasOpeningIntroEntered] = useState(false)
+  const [showOpeningIntro, setShowOpeningIntro] = useState(
+    () => normalizePath(window.location.pathname) === '/'
+  )
 
   const visibleProjects = useMemo(
     () => projects.filter((project) => filter === 'all' || project.type === filter),
     [filter]
   )
   const activeProject = visibleProjects[centeredIndex] || null
-  const shouldRunPageLoader = useMemo(() => {
-    const path = normalizePath(window.location.pathname)
-    return path === '/' || path === '/index' || path === '/index.html'
-  }, [])
-
   const scrollPages = useMemo(
     () => {
       const perItem = isMobileViewport ? 0.62 : 0.35
@@ -648,117 +641,67 @@ export default function App() {
     })
   }, [routePath])
 
-  useEffect(() => {
-    if (isAboutPage) return
-    const videoProjects = projects.filter((project) => project.type === 'video' && project.videoUrl)
-    const pending = videoProjects.filter((project) => !runtimeById[project.id])
-    if (!pending.length) return
+  const handleRuntimeChange = useCallback((projectId, runtime) => {
+    setRuntimeById((previous) => (
+      previous[projectId] === runtime ? previous : { ...previous, [projectId]: runtime }
+    ))
+  }, [])
 
-    const formatRuntime = (seconds) => {
-      const whole = Number.isFinite(seconds) ? Math.max(0, Math.floor(seconds)) : 0
-      const mins = Math.floor(whole / 60)
-      const secs = whole % 60
-      return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`
-    }
+  const handleCarouselReady = useCallback(() => {
+    setIsCarouselReady(true)
+  }, [])
 
-    const cleaners = []
-
-    pending.forEach((project) => {
-      const video = document.createElement('video')
-      video.preload = 'metadata'
-      video.src = project.videoUrl
-
-      const onLoaded = () => {
-        setRuntimeById((prev) => ({ ...prev, [project.id]: formatRuntime(video.duration) }))
-      }
-
-      const onError = () => {
-        setRuntimeById((prev) => ({ ...prev, [project.id]: '--:--' }))
-      }
-
-      video.addEventListener('loadedmetadata', onLoaded)
-      video.addEventListener('error', onError)
-      cleaners.push(() => {
-        video.removeEventListener('loadedmetadata', onLoaded)
-        video.removeEventListener('error', onError)
-      })
-    })
-
-    return () => cleaners.forEach((clean) => clean())
-  }, [isAboutPage, runtimeById])
+  const handleLightboxClose = useCallback(() => {
+    setSelectedProject(null)
+    setLightboxOriginRect(null)
+    setOpeningProjectId(null)
+  }, [])
 
   useEffect(() => {
-    if (!shouldRunPageLoader || !showPageLoader || !pageLoaderRef.current || !pageLoaderLineRef.current) return
+    const intro = openingIntroRef.current
+    const line = openingIntroLineRef.current
+    if (!showOpeningIntro || isAboutPage || !intro || !line) return undefined
 
-    const isMobile = window.matchMedia('(max-width: 768px)').matches
-    const minDuration = isMobile ? 640 : 820
-    let contentReady = false
-    let minElapsed = false
-    let finished = false
-
-    const finishLoader = () => {
-      if (finished || !contentReady || !minElapsed || !pageLoaderRef.current) return
-      finished = true
-
-      pageLoaderExitTlRef.current?.kill()
-      const tl = gsap.timeline({
-        onComplete: () => {
-          setShowPageLoader(false)
-          pageLoaderExitTlRef.current = null
-        },
-      })
-
-      if (isMobile) {
-        tl.to(pageLoaderRef.current, {
-          autoAlpha: 0,
-          duration: 0.42,
-          ease: 'power2.out',
-        }, 0)
-      } else {
-        tl.to(pageLoaderRef.current, {
-          xPercent: -100,
-          duration: 0.72,
-          ease: 'power3.inOut',
-        }, 0)
-      }
-
-      pageLoaderExitTlRef.current = tl
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      const frameId = window.requestAnimationFrame(() => setHasOpeningIntroEntered(true))
+      return () => window.cancelAnimationFrame(frameId)
     }
 
-    gsap.set(pageLoaderRef.current, { autoAlpha: 1, xPercent: 0 })
-    gsap.set(pageLoaderLineRef.current, { yPercent: 110 })
-    pageLoaderIntroTlRef.current?.kill()
-    pageLoaderIntroTlRef.current = gsap.timeline().to(pageLoaderLineRef.current, {
+    gsap.set(intro, { autoAlpha: 1, xPercent: 0 })
+    gsap.set(line, { yPercent: 115 })
+
+    const timeline = gsap.to(line, {
       yPercent: 0,
-      duration: 0.62,
+      duration: 0.42,
       ease: 'expo.out',
+      onComplete: () => setHasOpeningIntroEntered(true),
     })
 
-    const minTimer = window.setTimeout(() => {
-      minElapsed = true
-      finishLoader()
-    }, minDuration)
+    return () => timeline.kill()
+  }, [isAboutPage, showOpeningIntro])
 
-    const markReady = () => {
-      contentReady = true
-      finishLoader()
+  useEffect(() => {
+    const intro = openingIntroRef.current
+    const line = openingIntroLineRef.current
+    if (!showOpeningIntro || !hasOpeningIntroEntered || !isCarouselReady || !intro || !line) {
+      return undefined
     }
 
-    if (document.readyState === 'complete') {
-      requestAnimationFrame(markReady)
-    } else {
-      window.addEventListener('load', markReady, { once: true })
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      const frameId = window.requestAnimationFrame(() => setShowOpeningIntro(false))
+      return () => window.cancelAnimationFrame(frameId)
     }
 
-    return () => {
-      window.clearTimeout(minTimer)
-      pageLoaderIntroTlRef.current?.kill()
-      pageLoaderExitTlRef.current?.kill()
-      pageLoaderIntroTlRef.current = null
-      pageLoaderExitTlRef.current = null
-      window.removeEventListener('load', markReady)
-    }
-  }, [shouldRunPageLoader, showPageLoader])
+    const timeline = gsap.timeline({
+      onComplete: () => setShowOpeningIntro(false),
+    })
+
+    timeline
+      .to(intro, { xPercent: -100, duration: 0.48, ease: 'power3.inOut' })
+      .to(line, { yPercent: -115, duration: 0.26, ease: 'power2.in' }, 0.04)
+
+    return () => timeline.kill()
+  }, [hasOpeningIntroEntered, isCarouselReady, showOpeningIntro])
 
   useEffect(() => {
     const shell = canvasShellRef.current
@@ -769,8 +712,6 @@ export default function App() {
     if (isAboutPage || !shell) return
     if (isFilterTransitioning || isPageTransitioning) return
 
-    const waitingForLoader = shouldRunPageLoader && showPageLoader
-    if (waitingForLoader) return
     if (!returningFromAbout) {
       hasPlayedMainEnterRef.current = true
       return
@@ -828,7 +769,7 @@ export default function App() {
     }
 
     hasPlayedMainEnterRef.current = true
-  }, [isAboutPage, isFilterTransitioning, isPageTransitioning, shouldRunPageLoader, showPageLoader])
+  }, [isAboutPage, isFilterTransitioning, isPageTransitioning])
 
   const handleHoverTitleChange = useCallback((nextTitleRaw = '') => {
     if (!hoverWrapRef.current || !hoverLineRef.current) return
@@ -1304,10 +1245,12 @@ export default function App() {
 
   return (
     <div className="app-shell">
-      {!isAboutPage && showPageLoader && (
-        <div ref={pageLoaderRef} className="page-loader" aria-hidden="true">
-          <div className="page-loader-title-mask">
-            <div ref={pageLoaderLineRef} className="page-loader-title-line">JORY WESTRA 2026®</div>
+      {!isAboutPage && showOpeningIntro && (
+        <div ref={openingIntroRef} className="opening-intro" aria-hidden="true">
+          <div className="opening-intro-title-mask">
+            <div ref={openingIntroLineRef} className="opening-intro-title-line">
+              JORY WESTRA 2026®
+            </div>
           </div>
         </div>
       )}
@@ -1338,17 +1281,15 @@ export default function App() {
           </section>
 
           {selectedProject && (
-            <Lightbox 
-              project={selectedProject} 
-              originRect={lightboxOriginRect}
-              visibleProjects={visibleProjects}
-              getProjectRect={getProjectRect}
-              onClose={() => {
-                setSelectedProject(null)
-                setLightboxOriginRect(null)
-                setOpeningProjectId(null)
-              }} 
-            />
+            <Suspense fallback={null}>
+              <Lightbox
+                project={selectedProject}
+                originRect={lightboxOriginRect}
+                visibleProjects={visibleProjects}
+                getProjectRect={getProjectRect}
+                onClose={handleLightboxClose}
+              />
+            </Suspense>
           )}
 
           {!isMobileViewport && (
@@ -1393,41 +1334,38 @@ export default function App() {
           </div>
 
           <div ref={canvasShellRef} className="app-canvas-shell">
-            <Canvas 
-              camera={{ position: [0, 0, 6], fov: 35 }} 
-              className="app-canvas"
-            >
+            {(hasOpeningIntroEntered || !showOpeningIntro) && (
               <Suspense fallback={null}>
-                <ambientLight intensity={1} />
-                
-                <ScrollControls key={filter} horizontal pages={scrollPages} damping={0.08}>
-                  <Carousel 
-                    visibleProjects={visibleProjects}
-                    runtimeById={runtimeById}
-                    openingProjectId={openingProjectId}
-                    onRegisterProjectRectGetter={handleRegisterProjectRectGetter}
-                    onHoveredProjectChange={setHoveredProjectIndex}
-                    onSelect={(project, originRect) => {
-                      if (openDelayTimerRef.current) {
-                        window.clearTimeout(openDelayTimerRef.current)
-                      }
-                      setOpeningProjectId(project.id)
-                      setLightboxOriginRect(originRect || null)
-                      openDelayTimerRef.current = window.setTimeout(() => {
-                        setSelectedProject(project)
-                        openDelayTimerRef.current = null
-                      }, 220)
-                    }} 
-                    onActiveIndexChange={setCenteredIndex}
-                    onScrollProgress={handleScrollProgress}
-                    onLineFocusChange={handleLineFocusChange}
-                    onLineHitIndexChange={handleLineHitIndexChange}
-                    onRulerPositionsChange={handleRulerPositionsChange}
-                    filterWipeRef={filterWipeRef}
-                  />
-                </ScrollControls>
+                <HomeCanvas
+                  filter={filter}
+                  scrollPages={scrollPages}
+                  visibleProjects={visibleProjects}
+                  runtimeById={runtimeById}
+                  onRuntimeChange={handleRuntimeChange}
+                  onReady={handleCarouselReady}
+                  openingProjectId={openingProjectId}
+                  onRegisterProjectRectGetter={handleRegisterProjectRectGetter}
+                  onHoveredProjectChange={setHoveredProjectIndex}
+                  onSelect={(project, originRect) => {
+                    if (openDelayTimerRef.current) {
+                      window.clearTimeout(openDelayTimerRef.current)
+                    }
+                    setOpeningProjectId(project.id)
+                    setLightboxOriginRect(originRect || null)
+                    openDelayTimerRef.current = window.setTimeout(() => {
+                      setSelectedProject(project)
+                      openDelayTimerRef.current = null
+                    }, 220)
+                  }}
+                  onActiveIndexChange={setCenteredIndex}
+                  onScrollProgress={handleScrollProgress}
+                  onLineFocusChange={handleLineFocusChange}
+                  onLineHitIndexChange={handleLineHitIndexChange}
+                  onRulerPositionsChange={handleRulerPositionsChange}
+                  filterWipeRef={filterWipeRef}
+                />
               </Suspense>
-            </Canvas>
+            )}
           </div>
         </>
       )}

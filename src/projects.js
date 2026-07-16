@@ -1,20 +1,29 @@
 export const projects = [
   {
-    id: 14,
-    title: "BROKEN OSLO SLOTTSFJELL BTS",
+    id: 15,
+    title: "GUNNA",
     year: "2026",
     type: "video",
-    src: "/images/BrokenOslo-Slottsfjell-BTS-Thumbnail.jpg",
-    poster: "/images/BrokenOslo-Slottsfjell-BTS-Thumbnail.jpg",
-    videoUrl: "/images/BrokenOslo-Slottsfjell-BTS-Part1V3-Voiceover-subtitles.mp4"
+    src: "/images/Gunna-Poster.jpg",
+    poster: "/images/Gunna-Poster.jpg",
+    videoUrl: "/images/Gunna.mp4"
+  },
+  {
+    id: 14,
+    title: "BROKEN OSLO SLOTTSFJELL",
+    year: "2026",
+    type: "video",
+    src: "/images/BrokenOslo-Slottsfjell-BTS-Thumbnail.webp",
+    poster: "/images/BrokenOslo-Slottsfjell-BTS-Thumbnail.webp",
+    videoUrl: "/images/BrokenOslo-Slottsfjell-Final.mp4"
   },
   {
     id: 13,
     title: "STOMPIN JACQ AT BYENS TAK",
     year: "2026",
     type: "video",
-    src: "/images/StompinJacq-Byenstak-Thumbnail.jpg",
-    poster: "/images/StompinJacq-Byenstak-Thumbnail.jpg",
+    src: "/images/StompinJacq-Byenstak-Thumbnail.webp",
+    poster: "/images/StompinJacq-Byenstak-Thumbnail.webp",
     videoUrl: "/images/StompinJacq-Byenstak.mp4"
   },
   {
@@ -22,8 +31,8 @@ export const projects = [
     title: "MARGAUX",
     year: "2026",
     type: "video",
-    src: "/images/Margaux-Thumbnail.jpg",
-    poster: "/images/Margaux-Thumbnail.jpg",
+    src: "/images/Margaux-Thumbnail.webp",
+    poster: "/images/Margaux-Thumbnail.webp",
     videoUrl: "/images/Margaux-JW.mp4"
   },
   {
@@ -31,7 +40,7 @@ export const projects = [
     title: "MARIENE & HERMANN",
     year: "2026",
     type: "photo",
-    src: "/images/Mariene-Hermann-Thumbnail.jpg",
+    src: "/images/Mariene-Hermann-Thumbnail.webp",
     gallery: [
       "/images/Mariene-Hermann-1.jpg",
       "/images/Mariene-Hermann-2.jpg",
@@ -48,8 +57,8 @@ export const projects = [
     title: "SUNSUBIRO X BROKEN OSLO",
     year: "2026",
     type: "video",
-    src: "/images/SUNSUBIROXBROKENOSLO-THUMBNAIL.jpg",
-    poster: "/images/SUNSUBIROXBROKENOSLO-THUMBNAIL.jpg",
+    src: "/images/SUNSUBIROXBROKENOSLO-THUMBNAIL.webp",
+    poster: "/images/SUNSUBIROXBROKENOSLO-THUMBNAIL.webp",
     videoUrl: "/images/SUNSUBIROXBROKENOSLO-HB.mp4"
   },
   {
@@ -57,8 +66,8 @@ export const projects = [
     title: "STOCKHOLM",
     year: "2026",
     type: "video",
-    src: "/images/Stockholm-Thumbnail.jpg",
-    poster: "/images/Stockholm-Thumbnail.jpg",
+    src: "/images/Stockholm-Thumbnail.webp",
+    poster: "/images/Stockholm-Thumbnail.webp",
     videoUrl: "/images/Stockholm-V8.mp4"
   },
   {
@@ -66,8 +75,8 @@ export const projects = [
     title: "GOLDEN HOUR OSLO",
     year: "2025",
     type: "video",
-    src: "/images/golden-hour.png",
-    poster: "/images/golden-hour.png",
+    src: "/images/golden-hour.webp",
+    poster: "/images/golden-hour.webp",
     videoUrl: "/images/GoldenHourHBWebsite.mp4"
   },
   {
@@ -75,7 +84,7 @@ export const projects = [
     title: "GRAN CANARIA",
     year: "2025",
     type: "photo",
-    src: "/images/gran-canaria.jpg",
+    src: "/images/gran-canaria.webp",
     gallery: [
       "/images/gran-canaria-1.jpg",
       "/images/gran-canaria-2.jpg",
@@ -90,8 +99,8 @@ export const projects = [
     title: "JUL I VINTERLAND",
     year: "2025",
     type: "video",
-    src: "/images/jul-i-vinterland.png",
-    poster: "/images/jul-i-vinterland.png",
+    src: "/images/jul-i-vinterland.webp",
+    poster: "/images/jul-i-vinterland.webp",
     videoUrl: "/images/JuliVinterlandHBWebsite.mp4"
   },
   {
@@ -99,8 +108,8 @@ export const projects = [
     title: "SINT PIETERSBERG",
     year: "2024",
     type: "video",
-    src: "/images/SintPieters-Thumbnail.jpg",
-    poster: "/images/SintPieters-Thumbnail.jpg",
+    src: "/images/SintPieters-Thumbnail.webp",
+    poster: "/images/SintPieters-Thumbnail.webp",
     videoUrl: "/images/SintPieters-HB.mp4"
   },
 ];

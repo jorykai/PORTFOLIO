@@ -63,6 +63,7 @@ export default function Lightbox({
   const rafProgressRef = useRef(0)
   const openAnimRef = useRef(null)
   const closeAnimRef = useRef(null)
+  const requestCloseRef = useRef(null)
   const transitionDirRef = useRef(0)
   const isSwitchingRef = useRef(false)
   const isClosingRef = useRef(false)
@@ -218,6 +219,8 @@ export default function Lightbox({
     closeAnimRef.current = tl
   }, [activeProject?.id, isVideoLightbox, onClose, resolveProjectRect])
 
+  requestCloseRef.current = requestClose
+
   useEffect(() => {
     const { body } = document
     const previousOverflow = body.style.overflow
@@ -225,7 +228,7 @@ export default function Lightbox({
     body.classList.add('body--lightbox-open')
 
     const onKeyDown = (event) => {
-      if (event.key === 'Escape') requestClose()
+      if (event.key === 'Escape') requestCloseRef.current?.()
     }
 
     window.addEventListener('keydown', onKeyDown)
@@ -241,9 +244,8 @@ export default function Lightbox({
       isClosingRef.current = false
       isSwitchingRef.current = false
       transitionDirRef.current = 0
-      setHoveredNavZone(null)
     }
-  }, [requestClose])
+  }, [])
 
   useEffect(() => {
     if (!isVideoLightbox || !videoRef.current) return

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React, { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { useScroll } from '@react-three/drei'
 import ImagePlane from './ImagePlane'
@@ -19,6 +19,8 @@ function getDimensions(type, videoHeight) {
 export default function Carousel({
   visibleProjects,
   runtimeById = {},
+  onRuntimeChange,
+  onReady,
   openingProjectId = null,
   onSelect,
   onRegisterProjectRectGetter,
@@ -44,10 +46,40 @@ export default function Carousel({
   const tmpCenterRef = useRef(new THREE.Vector3())
   const tmpLeftRef = useRef(new THREE.Vector3())
   const tmpRightRef = useRef(new THREE.Vector3())
+  const readinessRef = useRef({ key: '', loadedProjectIds: new Set(), signaled: false })
+  const remainingLoadTimerRef = useRef(null)
   const [hoveredIndex, setHoveredIndex] = useState(-1)
+  const [canLoadRemainingProjects, setCanLoadRemainingProjects] = useState(false)
   const [isMobileViewport, setIsMobileViewport] = useState(
     () => window.matchMedia('(max-width: 768px)').matches
   )
+
+  const criticalProjectIds = useMemo(
+    () => visibleProjects.slice(0, 3).map((project) => project.id),
+    [visibleProjects]
+  )
+  const readinessKey = criticalProjectIds.join(':')
+
+  if (readinessRef.current.key !== readinessKey) {
+    readinessRef.current = { key: readinessKey, loadedProjectIds: new Set(), signaled: false }
+  }
+
+  const handleTextureReady = useCallback((projectId) => {
+    const readiness = readinessRef.current
+    readiness.loadedProjectIds.add(projectId)
+
+    if (
+      !readiness.signaled &&
+      criticalProjectIds.every((criticalProjectId) => readiness.loadedProjectIds.has(criticalProjectId))
+    ) {
+      readiness.signaled = true
+      onReady?.()
+      remainingLoadTimerRef.current = window.setTimeout(() => {
+        setCanLoadRemainingProjects(true)
+        remainingLoadTimerRef.current = null
+      }, 700)
+    }
+  }, [criticalProjectIds, onReady])
 
   useEffect(() => {
     const media = window.matchMedia('(max-width: 768px)')
@@ -109,6 +141,10 @@ export default function Carousel({
       if (hoverReleaseTimerRef.current) {
         window.clearTimeout(hoverReleaseTimerRef.current)
         hoverReleaseTimerRef.current = null
+      }
+      if (remainingLoadTimerRef.current) {
+        window.clearTimeout(remainingLoadTimerRef.current)
+        remainingLoadTimerRef.current = null
       }
     }
   }, [])
@@ -235,6 +271,8 @@ export default function Carousel({
   return (
     <group ref={groupRef}>
       {layout.map(({ project, width, height, x }, index) => {
+        if (index >= criticalProjectIds.length && !canLoadRemainingProjects) return null
+
         let offsetX = 0
         if (hasOpeningFocus && project.id !== openingProjectId) {
           const distance = Math.abs(index - openingIndex)
@@ -255,42 +293,45 @@ export default function Carousel({
             : 'other'
 
         return (
-        <ImagePlane
-          key={project.id}
-          projectId={project.id}
-          url={project.type === 'video' ? project.poster : project.src}
-          videoUrl={project.videoUrl}
-          title={project.title}
-          year={project.year || '2025'}
-          type={project.type}
-          runtime={runtimeById[project.id] || '--:--'}
-          width={width}
-          height={height}
-          dockFlowRef={dockFocusRefs.current[index]}
-          position={[x, 0, 0]}
-          offsetX={offsetX}
-          openingState={openingState}
-          onClick={(originRect) => onSelect(project, originRect)}
-          onRegisterProjectRectGetter={onRegisterProjectRectGetter}
-          onHoverProjectChange={(isHovered) => {
-            if (hoverReleaseTimerRef.current) {
-              window.clearTimeout(hoverReleaseTimerRef.current)
-              hoverReleaseTimerRef.current = null
-            }
+          <Suspense key={project.id} fallback={null}>
+            <ImagePlane
+              projectId={project.id}
+              url={project.type === 'video' ? project.poster : project.src}
+              videoUrl={project.videoUrl}
+              title={project.title}
+              year={project.year || '2025'}
+              type={project.type}
+              runtime={runtimeById[project.id] || '--:--'}
+              onRuntimeChange={onRuntimeChange}
+              onTextureReady={handleTextureReady}
+              width={width}
+              height={height}
+              dockFlowRef={dockFocusRefs.current[index]}
+              position={[x, 0, 0]}
+              offsetX={offsetX}
+              openingState={openingState}
+              onClick={(originRect) => onSelect(project, originRect)}
+              onRegisterProjectRectGetter={onRegisterProjectRectGetter}
+              onHoverProjectChange={(isHovered) => {
+                if (hoverReleaseTimerRef.current) {
+                  window.clearTimeout(hoverReleaseTimerRef.current)
+                  hoverReleaseTimerRef.current = null
+                }
 
-            if (isHovered) {
-              setHoveredIndex(index)
-              onHoveredProjectChange?.(index)
-              return
-            }
+                if (isHovered) {
+                  setHoveredIndex(index)
+                  onHoveredProjectChange?.(index)
+                  return
+                }
 
-            hoverReleaseTimerRef.current = window.setTimeout(() => {
-              setHoveredIndex((prev) => (prev === index ? -1 : prev))
-              onHoveredProjectChange?.(-1)
-              hoverReleaseTimerRef.current = null
-            }, 60)
-          }}
-        />
+                hoverReleaseTimerRef.current = window.setTimeout(() => {
+                  setHoveredIndex((prev) => (prev === index ? -1 : prev))
+                  onHoveredProjectChange?.(-1)
+                  hoverReleaseTimerRef.current = null
+                }, 60)
+              }}
+            />
+          </Suspense>
         )
       })}
     </group>

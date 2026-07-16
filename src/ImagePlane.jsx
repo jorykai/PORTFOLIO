@@ -117,6 +117,8 @@ export default function ImagePlane({
   year = '2025',
   type = 'photo',
   runtime = '--:--',
+  onRuntimeChange,
+  onTextureReady,
   width = 3,
   height = 2,
   dockFlowRef = null,
@@ -136,6 +138,7 @@ export default function ImagePlane({
   const positionTweenRef = useRef(null)
   const videoElementRef = useRef(null)
   const videoTextureRef = useRef(null)
+  const [videoVersion, setVideoVersion] = useState(0)
   const texture = useTexture(url)
   const [posterAspect, setPosterAspect] = useState(1.0)
   const [videoAspect, setVideoAspect] = useState(16 / 9)
@@ -173,24 +176,34 @@ export default function ImagePlane({
           uniforms.uImageAspect.value = nextPosterAspect
         }
       }
+
+      onTextureReady?.(projectId)
     }
-  }, [hovered, isVideo, texture, uniforms])
+  }, [hovered, isVideo, onTextureReady, projectId, texture, uniforms])
 
   useEffect(() => {
-    if (!isVideo || !videoUrl) return
+    if (!isVideo || !videoUrl || !hovered) return
 
     const video = document.createElement('video')
-    video.src = videoUrl
     video.crossOrigin = 'anonymous'
     video.muted = true
     video.loop = true
     video.playsInline = true
     video.preload = 'metadata'
+    video.src = videoUrl
 
     const handleLoadedMetadata = () => {
       if (video.videoWidth && video.videoHeight) {
         setVideoAspect(video.videoWidth / video.videoHeight)
       }
+
+      const wholeSeconds = Number.isFinite(video.duration) ? Math.max(0, Math.floor(video.duration)) : 0
+      const minutes = Math.floor(wholeSeconds / 60)
+      const seconds = wholeSeconds % 60
+      onRuntimeChange?.(
+        projectId,
+        `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
+      )
     }
 
     video.addEventListener('loadedmetadata', handleLoadedMetadata)
@@ -203,6 +216,7 @@ export default function ImagePlane({
 
     videoElementRef.current = video
     videoTextureRef.current = videoTexture
+    setVideoVersion((version) => version + 1)
 
     return () => {
       video.removeEventListener('loadedmetadata', handleLoadedMetadata)
@@ -213,7 +227,7 @@ export default function ImagePlane({
       videoElementRef.current = null
       videoTextureRef.current = null
     }
-  }, [isVideo, videoUrl])
+  }, [hovered, isVideo, onRuntimeChange, projectId, videoUrl])
 
   useEffect(() => {
     uniforms.uPlaneAspect.value = width / height
@@ -262,7 +276,7 @@ export default function ImagePlane({
     video.currentTime = 0
     uniforms.uTexture.value = texture
     uniforms.uImageAspect.value = posterAspect
-  }, [hovered, isVideo, posterAspect, texture, uniforms, videoAspect])
+  }, [hovered, isVideo, posterAspect, texture, uniforms, videoAspect, videoVersion])
 
   useEffect(() => {
     const lines = [lineLeftRef.current, lineRightRef.current].filter(Boolean)
