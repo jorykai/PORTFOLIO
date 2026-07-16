@@ -893,6 +893,7 @@ body.body--lightbox-open .mobile-sticky-meta {
   background: #000;
   --player-preview-width: clamp(72px, 8.5vw, 132px);
   --player-preview-shift: 0px;
+  --player-top-control-safe-zone: 72px;
   justify-content: center;
   align-items: center;
   z-index: 2147483647;
@@ -1038,6 +1039,15 @@ body.body--lightbox-open .mobile-sticky-meta {
   border: 0;
   background: transparent;
   font-family: inherit;
+  min-height: 44px;
+  padding: 10px 0 12px 18px;
+  margin: -10px 0 -12px -18px;
+  z-index: 2;
+  touch-action: manipulation;
+}
+
+.player-close::before {
+  left: calc(18px - 0.66em);
 }
 
 .player-bottom {
@@ -1172,7 +1182,7 @@ body.body--lightbox-open .mobile-sticky-meta {
   }
 
   .video-lightbox {
-    --player-nav-zone-top-inset: clamp(68px, 9vh, 124px);
+    --player-nav-zone-top-inset: clamp(var(--player-top-control-safe-zone), 9vh, 124px);
     --player-nav-zone-bottom-inset: clamp(86px, 10vh, 146px);
   }
 
@@ -1241,7 +1251,7 @@ body.body--lightbox-open .mobile-sticky-meta {
   }
 
   .player-prev {
-    top: 56px;
+    top: var(--player-top-control-safe-zone);
     bottom: auto;
     left: 50%;
     right: auto;
